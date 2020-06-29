@@ -79,6 +79,32 @@ bool UnrealInterface::Objects::DeleteObject(UnrealInterface::Object::Id id)
 
     world_control_msgs::DeleteModel model;
     model.request.id = string_id;
+
+    if(!DeleteModel(model))
+    {
+        // TODO Remove or fix Bug in UROSWorldControl.
+        // This is just a method to update objects even though UROSWorldControl can't find them temporarily
+        for(int i = 0; i < retry_count_; i++)
+        {
+            ros::Duration(retry_delay_).sleep();
+            std::cout << "Retrying to delete object " << string_id << std::endl;
+            if(DeleteModel(model))
+            {
+                std::cout << "Deleted Object " << string_id << " successfully in iteration " << i << std::endl;
+                return true;
+            }
+        }
+
+        std::cout << "Retrying to update pose failed. Giving up..."  << std::endl;
+        return false;
+    }
+
+    return true;
+
+}
+
+bool UnrealInterface::Objects::DeleteModel(world_control_msgs::DeleteModel model)
+{
     //check whether or not the spawning service server was reached
     if (!delete_client_.call(model))
     {
@@ -90,7 +116,7 @@ bool UnrealInterface::Objects::DeleteObject(UnrealInterface::Object::Id id)
     // When is a good time to delete stuff?
     // Only if the service call suceeds?
     // But on the other hand, it will also return false if actors are already gone...
-    spawned_objects_.erase(string_id);
+    spawned_objects_.erase(model.request.id);
 
     //check the status of the respond from the server
     if (!model.response.success)
@@ -123,4 +149,73 @@ void UnrealInterface::Objects::PrintAllObjectInfo()
 int UnrealInterface::Objects::SpawnedObjectCount()
 {
     return spawned_objects_.size();
+}
+
+bool UnrealInterface::Objects::SetObjectPose(UnrealInterface::Object::Id id, geometry_msgs::Pose pose) {
+    ROS_INFO_STREAM("Send object pose update to UE4");
+
+    world_control_msgs::SetModelPose setmodelpose_srv;
+
+    // We assume that the UnrealInterface::Object::Id is equal to the semlog Id atm
+    setmodelpose_srv.request.id = id;
+    setmodelpose_srv.request.pose = pose;
+
+    if(!SetModelPose(setmodelpose_srv))
+    {
+        // TODO Remove or fix Bug in UROSWorldControl.
+        // This is just a method to update objects even though UROSWorldControl can't find them temporarily
+        for(int i = 0; i < retry_count_; i++)
+        {
+            ros::Duration(retry_delay_).sleep();
+            std::cout << "Retrying to update pose"  << std::endl;
+            if(SetModelPose(setmodelpose_srv))
+            {
+                std::cout << "Updated pose successfully in iteration " << i << std::endl;
+                return true;
+            }
+        }
+
+        std::cout << "Retrying to update pose failed. Giving up..."  << std::endl;
+        return false;
+    }
+
+    return true;
+}
+bool UnrealInterface::Objects::SetModelPose(world_control_msgs::SetModelPose setmodelposesrv) {
+    if (!set_pose_client_.call(setmodelposesrv))
+    {
+        ROS_ERROR("Failed to call service client for SetModelPose");
+        return false;
+    }
+
+    if (!setmodelposesrv.response.success)
+    {
+        ROS_ERROR("SetModelPose Service received non-success response during update");
+
+        return false;
+    }
+
+    return true;
+}
+
+bool UnrealInterface::Objects::DeleteAllSpawnedObjects()
+{
+    ROS_INFO_STREAM("Deleting all previously spawned objects (" << spawned_objects_.size() << ")");
+    bool return_value = true;
+
+    for(auto const pair : spawned_objects_)
+    {
+        UnrealInterface::Object::Id obj_id = pair.first;
+        if(!DeleteObject(obj_id))
+        {
+            // If you've reached this part, even after retrying we couldn't delete the desired object.
+            // This might happen due to bad housekeeping in this->spawned_objects_ or a communication error
+            // with UROSWorldControl.
+            //
+            // Try to delete the rest, but report false at the end.
+            return_value = false;
+        }
+    }
+
+    return return_value;
 }
