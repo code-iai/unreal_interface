@@ -1,4 +1,3 @@
-// Bring in gtest
 #include <gtest/gtest.h>
 #include <ros/ros.h>
 #include <chrono>
@@ -6,8 +5,18 @@
 
 #include <unreal_interface/object.h>
 
+/**
+ * This series of unit tests assumes that it is run into a UE4 instance with the necessary Plugins
+ * mentioned in the README.md AND some meshes/models that are usually shipped with
+ * RobCog (https://github.com/robcog-iai/RobCog).
+ */
+
 std::shared_ptr<UnrealInterface::Objects> uio;
 
+TEST(TestSuite, transportShouldBeAvailable)
+{
+    ASSERT_TRUE(uio->TransportAvailable());
+}
 // Declare a test
 TEST(TestSuite, SpawnObject)
 {
@@ -22,7 +31,7 @@ TEST(TestSuite, SpawnObject)
     spawn_model_srv.request.pose.orientation.x = 0;
     spawn_model_srv.request.pose.orientation.y = 0;
     spawn_model_srv.request.pose.orientation.z = 0;
-    spawn_model_srv.request.pose.orientation.w = 0;
+    spawn_model_srv.request.pose.orientation.w = 1;
 
     spawn_model_srv.request.physics_properties.mobility = spawn_model_srv.request.physics_properties.STATIONARY;
 
@@ -121,7 +130,7 @@ TEST(TestSuite, deleteAllSpawnedObjects)
     spawn_model_srv.request.pose.orientation.x = 0;
     spawn_model_srv.request.pose.orientation.y = 0;
     spawn_model_srv.request.pose.orientation.z = 0;
-    spawn_model_srv.request.pose.orientation.w = 0;
+    spawn_model_srv.request.pose.orientation.w = 1;
 
     spawn_model_srv.request.physics_properties.mobility = spawn_model_srv.request.physics_properties.STATIONARY;
 
@@ -146,7 +155,7 @@ TEST(TestSuite, deleteAllSpawnedObjects)
     spawn_model_srv2.request.pose.orientation.x = 0;
     spawn_model_srv2.request.pose.orientation.y = 0;
     spawn_model_srv2.request.pose.orientation.z = 0;
-    spawn_model_srv2.request.pose.orientation.w = 0;
+    spawn_model_srv2.request.pose.orientation.w = 1;
 
     spawn_model_srv2.request.physics_properties.mobility = spawn_model_srv2.request.physics_properties.STATIONARY;
 
@@ -165,6 +174,49 @@ TEST(TestSuite, deleteAllSpawnedObjects)
     // Try to delete the same object again after a couple of secs
     ASSERT_TRUE(uio->DeleteAllSpawnedObjects());
     ASSERT_EQ(uio->SpawnedObjectCount(), 0);
+    ros::Duration(0.5).sleep();
+}
+
+TEST(TestSuite, getObjectPose)
+{
+    world_control_msgs::SpawnModel spawn_model_srv;
+
+    spawn_model_srv.request.name = "AlbiHimbeerJuice"; // This is used to lookup the actual model
+
+    // Set pose in the UE4 world frame, but with ROS coordinate conventions
+    spawn_model_srv.request.pose.position.x = -0.60;
+    spawn_model_srv.request.pose.position.y = -2.40;
+    spawn_model_srv.request.pose.position.z = 1.00;
+    spawn_model_srv.request.pose.orientation.x = 0;
+    spawn_model_srv.request.pose.orientation.y = 0;
+    spawn_model_srv.request.pose.orientation.z = 0;
+    spawn_model_srv.request.pose.orientation.w = 1;
+
+    spawn_model_srv.request.physics_properties.mobility = spawn_model_srv.request.physics_properties.STATIONARY;
+
+    // Assigning the label that is also used as a reference in the object map
+    // This must be unique!
+    spawn_model_srv.request.actor_label = "TestObjectLabel";
+
+    // Last step. Spawn the actual model.
+    UnrealInterface::Object::Id id_of_object_in_unreal;
+    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal));
+    ASSERT_EQ(uio->SpawnedObjectCount(), 1);
+
+    ros::Duration(1.0).sleep();
+
+    geometry_msgs::Pose result_pose;
+    ASSERT_TRUE(uio->GetObjectPose(id_of_object_in_unreal,result_pose));
+    ASSERT_FLOAT_EQ(result_pose.position.x, spawn_model_srv.request.pose.position.x);
+    ASSERT_FLOAT_EQ(result_pose.position.y, spawn_model_srv.request.pose.position.y);
+    ASSERT_FLOAT_EQ(result_pose.position.z, spawn_model_srv.request.pose.position.z);
+    ASSERT_FLOAT_EQ(result_pose.orientation.x, spawn_model_srv.request.pose.orientation.x);
+    ASSERT_FLOAT_EQ(result_pose.orientation.y, spawn_model_srv.request.pose.orientation.y);
+    ASSERT_FLOAT_EQ(result_pose.orientation.z, spawn_model_srv.request.pose.orientation.z);
+    ASSERT_FLOAT_EQ(result_pose.orientation.w, spawn_model_srv.request.pose.orientation.w);
+
+    // Try to delete the same object again after a couple of secs
+    ASSERT_TRUE(uio->DeleteObject(id_of_object_in_unreal));
     ros::Duration(0.5).sleep();
 }
 

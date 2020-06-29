@@ -16,12 +16,22 @@ void UnrealInterface::Objects::Init()
     delete_client_ = n_.serviceClient<world_control_msgs::DeleteModel>(urosworldcontrol_domain_+"/delete_model");
 
     set_pose_client_ = n_.serviceClient<world_control_msgs::SetModelPose>(urosworldcontrol_domain_ + "/set_model_pose");
+    get_pose_client_ = n_.serviceClient<world_control_msgs::GetModelPose>(urosworldcontrol_domain_ + "/get_model_pose");
+}
+
+bool UnrealInterface::Objects::TransportAvailable()
+{
+    return (
+            spawn_client_.exists() &&
+            delete_client_.exists() &&
+            set_pose_client_.exists() &&
+            get_pose_client_.exists()
+    );
 }
 
 
 bool UnrealInterface::Objects::SpawnObject(world_control_msgs::SpawnModel model, UnrealInterface::Object::Id *id_of_spawned_object = nullptr)
 {
-
     // Add additional information to the request that is necessary for the functionality
     // of UnrealInterface.
 
@@ -34,7 +44,6 @@ bool UnrealInterface::Objects::SpawnObject(world_control_msgs::SpawnModel model,
     tag.key = "spawned";
     tag.value = std::ctime(&now_time);
     model.request.tags.push_back(tag);
-
 
     //check whether or not the spawning service server was reached
     if (!spawn_client_.call(model))
@@ -51,12 +60,11 @@ bool UnrealInterface::Objects::SpawnObject(world_control_msgs::SpawnModel model,
     }
 
     //save object in object map
-
     UnrealInterface::Object::ObjectInfo object_info;
     object_info.id_ = model.response.id;
     object_info.actor_name_ = model.response.name;
 
-
+    // TODO - Use mutex here too?
     this->spawned_objects_[model.response.id] = object_info;
 
     //print the ID of the spawned hypothesis
@@ -129,11 +137,12 @@ bool UnrealInterface::Objects::DeleteModel(world_control_msgs::DeleteModel model
     return true;
 }
 
-UnrealInterface::Object::ObjectInfo& UnrealInterface::Objects::GetObjectInfo(UnrealInterface::Object::Id id)
+UnrealInterface::Object::ObjectInfo UnrealInterface::Objects::GetObjectInfo(UnrealInterface::Object::Id id)
 {
     if(spawned_objects_.count(id)==0)
         throw std::invalid_argument("The given ID is not in the spawned object representation");
 
+    std::lock_guard<std::mutex> guard(object_info_mutex_);
     return spawned_objects_[id];
 }
 
@@ -181,6 +190,33 @@ bool UnrealInterface::Objects::SetObjectPose(UnrealInterface::Object::Id id, geo
 
     return true;
 }
+
+bool UnrealInterface::Objects::GetObjectPose(UnrealInterface::Object::Id id, geometry_msgs::Pose &pose)
+{
+    world_control_msgs::GetModelPose getmodelpose_srv;
+
+    // We assume that the UnrealInterface::Object::Id is equal to the semlog Id atm
+    getmodelpose_srv.request.id = id;
+
+    if (!get_pose_client_.call(getmodelpose_srv))
+    {
+        ROS_ERROR("Failed to call service client for GetModelPose");
+        return false;
+    }
+
+    if (!getmodelpose_srv.response.success)
+    {
+        ROS_ERROR("GetModelPose Service received non-success response during update");
+
+        return false;
+    }
+
+    pose.position = getmodelpose_srv.response.pose.position;
+    pose.orientation = getmodelpose_srv.response.pose.orientation;
+
+    return true;
+}
+
 bool UnrealInterface::Objects::SetModelPose(world_control_msgs::SetModelPose setmodelposesrv) {
     if (!set_pose_client_.call(setmodelposesrv))
     {

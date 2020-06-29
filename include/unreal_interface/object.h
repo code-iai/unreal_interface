@@ -7,8 +7,10 @@
 #include <geometry_msgs/Pose.h>
 
 #include <world_control_msgs/SpawnModel.h>
+#include <world_control_msgs/GetModelPose.h>
 #include <world_control_msgs/SetModelPose.h>
 #include <world_control_msgs/DeleteModel.h>
+#include <mutex>
 
 namespace UnrealInterface
 {
@@ -28,6 +30,12 @@ private:
     ros::ServiceClient spawn_client_;
     ros::ServiceClient delete_client_;
     ros::ServiceClient set_pose_client_;
+    ros::ServiceClient get_pose_client_;
+
+    // Object info might be updated asynchronously to be faster
+    // Avoid collisions
+    std::mutex object_info_mutex_;
+
 
     std::string urosworldcontrol_domain_ = "pie_rwc";
     int retry_count_ = 5;
@@ -54,6 +62,13 @@ public:
     }
 
     /**
+     * Use this method to do a low-level functional check of the transport capabilities.
+     * In the current version of this library, this method is checking if the necessary
+     * services/topics are available.
+     */
+    bool TransportAvailable();
+
+    /**
      * Spawn a single object in UE4
      * This function DOES NOT implement sanity checks, but just publishes
      * the given model and keeps track of that in spawned_objects_.
@@ -65,15 +80,14 @@ public:
      */
     bool SpawnObject(world_control_msgs::SpawnModel model, UnrealInterface::Object::Id *id_of_spawned_object);
 
-
-
     /**
      * Similar to SpawnObjects, but you can spawn multiple objects at once
      * STILL TODO
      * We need to extend UROSWorldControl for that.
      * TODO Have a seperate type that has lists of success responses and IDs
      */
-    bool SpawnObjects(std::vector<world_control_msgs::SpawnModel> models, std::vector<UnrealInterface::Object::Id> *ids_of_spawned_object);
+    bool SpawnObjects(std::vector<world_control_msgs::SpawnModel> models,
+                      std::vector<UnrealInterface::Object::Id> *ids_of_spawned_object);
 
 
     bool DeleteObject(UnrealInterface::Object::Id id);
@@ -87,6 +101,14 @@ public:
     bool SetObjectPose(UnrealInterface::Object::Id id, geometry_msgs::Pose pose);
 
     /**
+     * Gets the pose of a previously spawned object with the given UnrealInterface::Object::Id.
+     * This will retrieve the pose IMMEDIATELY from UE4 and put it into outPose.
+     *
+     * @return true if object can be found by 'Id'. false otherwise.
+     */
+    bool GetObjectPose(UnrealInterface::Object::Id id, geometry_msgs::Pose &outPose);
+
+    /**
      * Iterate over this.spawned_objects_ and delete all of them sequentially
      *
      * @return false, if atleast one Delete operation failed. true otherwise.
@@ -95,9 +117,13 @@ public:
 
     /**
      * Gets an data class that includes all the available information about an object.
+     * Please note, that some of the attributes are filled asynchronously to speed up the execution.
+     * So you might not have the most up2date data, especially if your update frequency in the UE4-side
+     * plugins is low.
+     *
      * @throws if Id is not existing (e.g. it has been spawned through this library before)
      */
-    UnrealInterface::Object::ObjectInfo& GetObjectInfo(UnrealInterface::Object::Id id);
+    UnrealInterface::Object::ObjectInfo GetObjectInfo(UnrealInterface::Object::Id id);
 
     void PrintAllObjectInfo();
 
