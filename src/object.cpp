@@ -8,15 +8,24 @@
 
 void UnrealInterface::Objects::Init()
 {
-    ROS_INFO_STREAM("Initializing BeliefStateCommunication ...");
+    ROS_INFO_STREAM("Initializing UnrealInterface::Objects...");
     //parameter initialization
     //client for model spawning
-    spawn_client_ = n_.serviceClient<world_control_msgs::SpawnModel>(urosworldcontrol_domain_+"/spawn_model");
+    spawn_client_ =
+            n_.serviceClient<world_control_msgs::SpawnModel>(urosworldcontrol_domain_+"/spawn_model");
     //client for model deletion
-    delete_client_ = n_.serviceClient<world_control_msgs::DeleteModel>(urosworldcontrol_domain_+"/delete_model");
+    delete_client_ =
+            n_.serviceClient<world_control_msgs::DeleteModel>(urosworldcontrol_domain_+"/delete_model");
 
-    set_pose_client_ = n_.serviceClient<world_control_msgs::SetModelPose>(urosworldcontrol_domain_ + "/set_model_pose");
-    get_pose_client_ = n_.serviceClient<world_control_msgs::GetModelPose>(urosworldcontrol_domain_ + "/get_model_pose");
+    set_pose_client_ =
+            n_.serviceClient<world_control_msgs::SetModelPose>(urosworldcontrol_domain_ + "/set_model_pose");
+    get_pose_client_ =
+            n_.serviceClient<world_control_msgs::GetModelPose>(urosworldcontrol_domain_ + "/get_model_pose");
+
+    pose_update_subscriber_ = n_.subscribe("/unreal_interface/object_poses",
+            10,
+            &UnrealInterface::Objects::PoseUpdateCallback,
+            this);
 }
 
 bool UnrealInterface::Objects::TransportAvailable()
@@ -254,4 +263,20 @@ bool UnrealInterface::Objects::DeleteAllSpawnedObjects()
     }
 
     return return_value;
+}
+
+void UnrealInterface::Objects::PoseUpdateCallback(const geometry_msgs::PoseStamped& pose_stamped_msg)
+{
+    ROS_INFO_STREAM("Pose Update Callback received");
+
+    std::string object_id = pose_stamped_msg.header.frame_id;
+
+    if(spawned_objects_.count(object_id)==0)
+    {
+        ROS_INFO_STREAM("The given ID is not in the spawned object representation. Ignoring pose update");
+        return;
+    }
+
+    std::lock_guard<std::mutex> guard(object_info_mutex_);
+    spawned_objects_[object_id].pose_ = pose_stamped_msg.pose;
 }

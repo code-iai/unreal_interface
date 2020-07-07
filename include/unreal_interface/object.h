@@ -11,6 +11,7 @@
 #include <world_control_msgs/SetModelPose.h>
 #include <world_control_msgs/DeleteModel.h>
 #include <mutex>
+#include <geometry_msgs/PoseStamped.h>
 
 namespace UnrealInterface
 {
@@ -31,6 +32,7 @@ private:
     ros::ServiceClient delete_client_;
     ros::ServiceClient set_pose_client_;
     ros::ServiceClient get_pose_client_;
+    ros::Subscriber pose_update_subscriber_;
 
     // Object info might be updated asynchronously to be faster
     // Avoid collisions
@@ -145,6 +147,7 @@ public:
 
 private:
     void Init();
+
 protected:
     /**
      * Low-level Set Model Pose function. Users of this API should use SetObjectPose instead of this function.
@@ -159,6 +162,8 @@ protected:
      * @return true if successful, false otherwise.
      */
     bool DeleteModel(world_control_msgs::DeleteModel);
+
+    void PoseUpdateCallback(const geometry_msgs::PoseStamped&);
 };
 } // end of namespace
 #endif //UNREAL_INTERFACE_OBJECT_H

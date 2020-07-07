@@ -18,7 +18,7 @@ TEST(TestSuite, transportShouldBeAvailable)
     ASSERT_TRUE(uio->TransportAvailable());
 }
 // Declare a test
-TEST(TestSuite, SpawnObject)
+TEST(TestSuite, DISABLED_SpawnObject)
 {
     world_control_msgs::SpawnModel spawn_model_srv;
 
@@ -54,12 +54,12 @@ TEST(TestSuite, SpawnObject)
 }
 
 // Declare another test
-TEST(TestSuite, getNonExistingObjectInfo)
+TEST(TestSuite, DISABLED_GetNonExistingObjectInfo)
 {
     ASSERT_ANY_THROW(uio->GetObjectInfo("foobar"));
 }
 
-TEST(TestSuite, SetObjectPose)
+TEST(TestSuite, DISABLED_SetObjectPose)
 {
     world_control_msgs::SpawnModel spawn_model_srv;
 
@@ -117,7 +117,9 @@ TEST(TestSuite, SetObjectPose)
     ros::Duration(1.0).sleep();
 }
 
-TEST(TestSuite, deleteAllSpawnedObjects)
+
+
+TEST(TestSuite, DISABLED_DeleteAllSpawnedObjects)
 {
     world_control_msgs::SpawnModel spawn_model_srv;
 
@@ -177,7 +179,7 @@ TEST(TestSuite, deleteAllSpawnedObjects)
     ros::Duration(0.5).sleep();
 }
 
-TEST(TestSuite, getObjectPose)
+TEST(TestSuite, DISABLED_GetObjectPose)
 {
     world_control_msgs::SpawnModel spawn_model_srv;
 
@@ -221,6 +223,104 @@ TEST(TestSuite, getObjectPose)
 }
 
 
+TEST(TestSuite, GetObjectPoseAsynchronously)
+{
+    // Instead of requesting the ObjectPose directly and synchronously,
+    // we'll test the async update of UnrealInterface::Objects::GetObjectInfo(UnrealInterface::Object::Id id);
+
+    world_control_msgs::SpawnModel spawn_model_srv;
+
+    spawn_model_srv.request.name = "AlbiHimbeerJuice"; // This is used to lookup the actual model
+
+    // Set pose in the UE4 world frame, but with ROS coordinate conventions
+    spawn_model_srv.request.pose.position.x = -0.60;
+    spawn_model_srv.request.pose.position.y = -2.40;
+    spawn_model_srv.request.pose.position.z = 1.00;
+    spawn_model_srv.request.pose.orientation.x = 0;
+    spawn_model_srv.request.pose.orientation.y = 0;
+    spawn_model_srv.request.pose.orientation.z = 0;
+    spawn_model_srv.request.pose.orientation.w = 1;
+
+    spawn_model_srv.request.physics_properties.mobility = spawn_model_srv.request.physics_properties.DYNAMIC;
+
+    // Assigning the label that is also used as a reference in the object map
+    // This must be unique!
+    spawn_model_srv.request.actor_label = "GetObjectPoseAsynchronously";
+
+    // Last step. Spawn the actual model.
+    UnrealInterface::Object::Id id_of_object_in_unreal;
+    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal));
+    ASSERT_EQ(uio->SpawnedObjectCount(), 1);
+
+    // Sleep for a while so we definitely get an update even with the slow default update rate
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+
+    // Request the pose info
+    UnrealInterface::Object::ObjectInfo info = uio->GetObjectInfo(id_of_object_in_unreal);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.position.x, info.pose_.position.x);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.position.y, info.pose_.position.y);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.position.z, info.pose_.position.z);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.x, info.pose_.orientation.x);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.y, info.pose_.orientation.y);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.z, info.pose_.orientation.z);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.w, info.pose_.orientation.w);
+
+
+    // Actual Set Model Pose stuff
+    geometry_msgs::Pose pose;
+    // Set pose in the UE4 world frame, but with ROS coordinate conventions
+    // Make it a little higher (z axis) than before.
+    pose.position.x = -0.60;
+    pose.position.y = -2.40;
+    pose.position.z = 1.50;
+    pose.orientation.x = 0;
+    pose.orientation.y = 0;
+    pose.orientation.z = 0;
+    pose.orientation.w = 1;
+
+    ASSERT_TRUE(uio->SetObjectPose(id_of_object_in_unreal, pose));
+
+    ASSERT_EQ(uio->SpawnedObjectCount(), 1);
+
+    // Sleep for a while so we definitely get an update even with the slow default update rate
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+
+    // Request the pose info again and check if it changed after the SetObjectPose
+    UnrealInterface::Object::ObjectInfo info2 = uio->GetObjectInfo(id_of_object_in_unreal);
+    ASSERT_FLOAT_EQ(pose.position.x, info2.pose_.position.x);
+    ASSERT_FLOAT_EQ(pose.position.y, info2.pose_.position.y);
+    ASSERT_FLOAT_EQ(pose.position.z, info2.pose_.position.z);
+    ASSERT_FLOAT_EQ(pose.orientation.x, info2.pose_.orientation.x);
+    ASSERT_FLOAT_EQ(pose.orientation.y, info2.pose_.orientation.y);
+    ASSERT_FLOAT_EQ(pose.orientation.z, info2.pose_.orientation.z);
+    ASSERT_FLOAT_EQ(pose.orientation.w, info2.pose_.orientation.w);
+
+    // Try to delete the same object again after a couple of secs
+    ASSERT_TRUE(uio->DeleteObject(id_of_object_in_unreal));
+    ros::Duration(1.0).sleep();
+}
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char **argv){

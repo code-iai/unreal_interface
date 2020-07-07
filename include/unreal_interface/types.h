@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <geometry_msgs/Pose.h>
 
 namespace UnrealInterface::Object
 {
@@ -15,7 +16,12 @@ namespace UnrealInterface::Object
   {
   public:
     Id id_;
-    std::string actor_name_; // This is the unique Name of the Actor that you wil get when calling GetName() on an UE4 Actor
+
+    // This is the unique Name of the Actor that you wil get when calling GetName() on an UE4 Actor
+    std::string actor_name_;
+
+    // In UE4 world coordinates
+    geometry_msgs::Pose pose_;
 
     void print(){
         std::cout << "Object " << id_ << ": actor_name_ " << actor_name_ << std::endl;
