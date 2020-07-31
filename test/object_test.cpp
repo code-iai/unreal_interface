@@ -18,7 +18,7 @@ TEST(TestSuite, transportShouldBeAvailable)
     ASSERT_TRUE(uio->TransportAvailable());
 }
 // Declare a test
-TEST(TestSuite, DISABLED_SpawnObject)
+TEST(TestSuite, SpawnObject)
 {
     world_control_msgs::SpawnModel spawn_model_srv;
 
@@ -54,12 +54,12 @@ TEST(TestSuite, DISABLED_SpawnObject)
 }
 
 // Declare another test
-TEST(TestSuite, DISABLED_GetNonExistingObjectInfo)
+TEST(TestSuite, GetNonExistingObjectInfo)
 {
     ASSERT_ANY_THROW(uio->GetObjectInfo("foobar"));
 }
 
-TEST(TestSuite, DISABLED_SetObjectPose)
+TEST(TestSuite, SetObjectPose)
 {
     world_control_msgs::SpawnModel spawn_model_srv;
 
@@ -119,7 +119,7 @@ TEST(TestSuite, DISABLED_SetObjectPose)
 
 
 
-TEST(TestSuite, DISABLED_DeleteAllSpawnedObjects)
+TEST(TestSuite, DeleteAllSpawnedObjects)
 {
     world_control_msgs::SpawnModel spawn_model_srv;
 
@@ -179,7 +179,7 @@ TEST(TestSuite, DISABLED_DeleteAllSpawnedObjects)
     ros::Duration(0.5).sleep();
 }
 
-TEST(TestSuite, DISABLED_GetObjectPose)
+TEST(TestSuite, GetObjectPose)
 {
     world_control_msgs::SpawnModel spawn_model_srv;
 

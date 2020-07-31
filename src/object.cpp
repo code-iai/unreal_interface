@@ -77,7 +77,7 @@ bool UnrealInterface::Objects::SpawnObject(world_control_msgs::SpawnModel model,
     this->spawned_objects_[model.response.id] = object_info;
 
     //print the ID of the spawned hypothesis
-    ROS_INFO_STREAM("Object spawned with ID " << model.response.id << " and final actor name: " << model.response.name);
+    ROS_INFO_STREAM("UnrealInterface::Objects::SpawnObject: Object spawned with ID " << model.response.id << " and final actor name: " << model.response.name);
 
     if(id_of_spawned_object)
     {
@@ -133,7 +133,17 @@ bool UnrealInterface::Objects::DeleteModel(world_control_msgs::DeleteModel model
     // When is a good time to delete stuff?
     // Only if the service call suceeds?
     // But on the other hand, it will also return false if actors are already gone...
+    if(spawned_objects_.count(model.request.id) == 0)
+    {
+      ROS_ERROR_STREAM("Couldn't find " << model.request.id <<
+                       " in the spawned object mapping while calling DeleteModel." <<
+                         "Show UIO::PrintAllObjectInfo to debug.");
+      PrintAllObjectInfo();
+      return false;
+    }
+    ROS_INFO("Erasing ID from UIO Representation");
     spawned_objects_.erase(model.request.id);
+    ROS_INFO("DONE Erasing ID from UIO Representation");
 
     //check the status of the respond from the server
     if (!model.response.success)
@@ -248,20 +258,28 @@ bool UnrealInterface::Objects::DeleteAllSpawnedObjects()
     ROS_INFO_STREAM("Deleting all previously spawned objects (" << spawned_objects_.size() << ")");
     bool return_value = true;
 
-    for(auto const pair : spawned_objects_)
-    {
-        UnrealInterface::Object::Id obj_id = pair.first;
-        if(!DeleteObject(obj_id))
-        {
-            // If you've reached this part, even after retrying we couldn't delete the desired object.
-            // This might happen due to bad housekeeping in this->spawned_objects_ or a communication error
-            // with UROSWorldControl.
-            //
-            // Try to delete the rest, but report false at the end.
-            return_value = false;
-        }
-    }
+    // We make a copy of the spawned objects list first.
+    // This is due to the removal of some of the objects
+    // in DeleteObject which happens during the execution.
+    // This might cause problems.
+    // TODO: Make this more elegant without having to copy this map
+    std::map<UnrealInterface::Object::Id, UnrealInterface::Object::ObjectInfo>
+        copy_of_spawned_objects_ = spawned_objects_;
 
+    for(auto const pair : copy_of_spawned_objects_)
+    {
+      UnrealInterface::Object::Id obj_id = pair.first;
+      if(!DeleteObject(obj_id))
+      {
+        ROS_INFO("DeleteObject returned false in DeleteAllSpawnedObjects");
+        // If you've reached this part, even after retrying we couldn't delete the desired object.
+        // This might happen due to bad housekeeping in this->spawned_objects_ or a communication error
+        // with UROSWorldControl.
+        //
+        // Try to delete the rest, but report false at the end.
+        return_value = false;
+      }
+    }
     return return_value;
 }
 
