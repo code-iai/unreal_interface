@@ -285,8 +285,6 @@ bool UnrealInterface::Objects::DeleteAllSpawnedObjects()
 
 void UnrealInterface::Objects::PoseUpdateCallback(const geometry_msgs::PoseStamped& pose_stamped_msg)
 {
-    ROS_INFO_STREAM("Pose Update Callback received");
-
     std::string object_id = pose_stamped_msg.header.frame_id;
 
     if(spawned_objects_.count(object_id)==0)
