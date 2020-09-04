@@ -36,7 +36,8 @@ bool UnrealInterface::Objects::TransportAvailable()
             spawn_client_.exists() &&
             delete_client_.exists() &&
             set_pose_client_.exists() &&
-            get_pose_client_.exists()
+            get_pose_client_.exists() &&
+            delete_all_client_.exists()
     );
 }
 
