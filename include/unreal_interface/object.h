@@ -9,7 +9,9 @@
 #include <world_control_msgs/SpawnModel.h>
 #include <world_control_msgs/GetModelPose.h>
 #include <world_control_msgs/SetModelPose.h>
+#include <world_control_msgs/DeleteAll.h>
 #include <world_control_msgs/DeleteModel.h>
+
 #include <mutex>
 #include <geometry_msgs/PoseStamped.h>
 
@@ -26,24 +28,30 @@ public:
         Init();
     }
 private:
+    // Constants
+    const std::string DEFAULT_SPAWN_TAG_TYPE = "UnrealInterface";
+    const std::string DEFAULT_SPAWN_TAG_KEY = "spawned";
+
+
+
     // Variables
     ros::NodeHandle n_;
     ros::ServiceClient spawn_client_;
     ros::ServiceClient delete_client_;
     ros::ServiceClient set_pose_client_;
     ros::ServiceClient get_pose_client_;
+    ros::ServiceClient delete_all_client_;
     ros::Subscriber pose_update_subscriber_;
+
+    std::string urosworldcontrol_domain_ = "pie_rwc";
 
     // Object info might be updated asynchronously to be faster
     // Avoid collisions
     std::mutex object_info_mutex_;
 
-
-    std::string urosworldcontrol_domain_ = "pie_rwc";
     int retry_count_ = 5;
     float retry_delay_ = 0.4;
 
-//    std::vector<UnrealInterface::Object::Id> spawned_objects_;
     std::map<UnrealInterface::Object::Id, UnrealInterface::Object::ObjectInfo> spawned_objects_;
 
 public:
@@ -116,6 +124,16 @@ public:
      * @return false, if atleast one Delete operation failed. true otherwise.
      */
     bool DeleteAllSpawnedObjects();
+
+    /**
+    * Send a single service request to delete all objects that
+    * have been spawned by this module so far.
+    * Internally, this happens by deleting all objects in UE4 that
+    * match the semlog tag key&type of spawned objects.
+    *
+    * @return false, if service call failed. true otherwise.
+    */
+    bool DeleteAllSpawnedObjectsByTag();
 
     /**
      * Gets an data class that includes all the available information about an object.

@@ -16,6 +16,8 @@ void UnrealInterface::Objects::Init()
     //client for model deletion
     delete_client_ =
             n_.serviceClient<world_control_msgs::DeleteModel>(urosworldcontrol_domain_+"/delete_model");
+    delete_all_client_ =
+      n_.serviceClient<world_control_msgs::DeleteAll>(urosworldcontrol_domain_+"/delete_all");
 
     set_pose_client_ =
             n_.serviceClient<world_control_msgs::SetModelPose>(urosworldcontrol_domain_ + "/set_model_pose");
@@ -49,8 +51,8 @@ bool UnrealInterface::Objects::SpawnObject(world_control_msgs::SpawnModel model,
 
     // Set a tag so we can uniquely identify the spawned objects in UE4
     world_control_msgs::Tag tag;
-    tag.type = "UnrealInterface";
-    tag.key = "spawned";
+    tag.type = DEFAULT_SPAWN_TAG_TYPE;
+    tag.key = DEFAULT_SPAWN_TAG_KEY;
     tag.value = std::ctime(&now_time);
     model.request.tags.push_back(tag);
 
@@ -281,6 +283,26 @@ bool UnrealInterface::Objects::DeleteAllSpawnedObjects()
       }
     }
     return return_value;
+}
+
+
+bool UnrealInterface::Objects::DeleteAllSpawnedObjectsByTag()
+{
+  ROS_INFO_STREAM("Deleting all objects with key " << DEFAULT_SPAWN_TAG_KEY << " and type " << DEFAULT_SPAWN_TAG_TYPE);
+
+  world_control_msgs::DeleteAll srv;
+  srv.request.type_to_delete = DEFAULT_SPAWN_TAG_TYPE;
+  srv.request.key_to_delete = DEFAULT_SPAWN_TAG_KEY;
+  srv.request.ignore_value = true;
+  if(!delete_all_client_.call(srv)) {
+    ROS_INFO("DeleteAll service returned false in DeleteAllSpawnedObjectsByTag");
+    return false;
+  }
+
+  // Delete all objects from our representation
+  spawned_objects_.clear();
+
+  return true;
 }
 
 void UnrealInterface::Objects::PoseUpdateCallback(const geometry_msgs::PoseStamped& pose_stamped_msg)

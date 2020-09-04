@@ -179,6 +179,67 @@ TEST(TestSuite, DeleteAllSpawnedObjects)
     ros::Duration(0.5).sleep();
 }
 
+
+TEST(TestSuite, DeleteAllSpawnedObjectsByTag)
+{
+  world_control_msgs::SpawnModel spawn_model_srv;
+
+  spawn_model_srv.request.name = "AlbiHimbeerJuice"; // This is used to lookup the actual model
+
+  // Set pose in the UE4 world frame, but with ROS coordinate conventions
+  spawn_model_srv.request.pose.position.x = -0.60;
+  spawn_model_srv.request.pose.position.y = -2.40;
+  spawn_model_srv.request.pose.position.z = 1.00;
+  spawn_model_srv.request.pose.orientation.x = 0;
+  spawn_model_srv.request.pose.orientation.y = 0;
+  spawn_model_srv.request.pose.orientation.z = 0;
+  spawn_model_srv.request.pose.orientation.w = 1;
+
+  spawn_model_srv.request.physics_properties.mobility = spawn_model_srv.request.physics_properties.STATIONARY;
+
+  // Assigning the label that is also used as a reference in the object map
+  // This must be unique!
+  spawn_model_srv.request.actor_label = "TestObject1Label";
+
+  // Last step. Spawn the actual model.
+  UnrealInterface::Object::Id id_of_object_in_unreal;
+  ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal));
+
+  ////////////////// Second Object //////////////////
+  ///////////////////////////////////////////////////
+  world_control_msgs::SpawnModel spawn_model_srv2;
+
+  spawn_model_srv2.request.name = "KoellnMuesliKnusperHonigNuss"; // This is used to lookup the actual model
+
+  // Set pose in the UE4 world frame, but with ROS coordinate conventions
+  spawn_model_srv2.request.pose.position.x = -0.60;
+  spawn_model_srv2.request.pose.position.y = -2.10;
+  spawn_model_srv2.request.pose.position.z = 1.00;
+  spawn_model_srv2.request.pose.orientation.x = 0;
+  spawn_model_srv2.request.pose.orientation.y = 0;
+  spawn_model_srv2.request.pose.orientation.z = 0;
+  spawn_model_srv2.request.pose.orientation.w = 1;
+
+  spawn_model_srv2.request.physics_properties.mobility = spawn_model_srv2.request.physics_properties.STATIONARY;
+
+  // Assigning the label that is also used as a reference in the object map
+  // This must be unique!
+  spawn_model_srv2.request.actor_label = "TestObject2Label";
+
+  // Last step. Spawn the actual model.
+  UnrealInterface::Object::Id id_of_object2_in_unreal;
+  ASSERT_TRUE(uio->SpawnObject(spawn_model_srv2, &id_of_object2_in_unreal));
+
+  ASSERT_EQ(uio->SpawnedObjectCount(), 2);
+  uio->PrintAllObjectInfo();
+  ros::Duration(1.0).sleep();
+
+  // Delete All Objects
+  ASSERT_TRUE(uio->DeleteAllSpawnedObjectsByTag());
+  ASSERT_EQ(uio->SpawnedObjectCount(), 0);
+  ros::Duration(0.5).sleep();
+}
+
 TEST(TestSuite, GetObjectPose)
 {
     world_control_msgs::SpawnModel spawn_model_srv;
