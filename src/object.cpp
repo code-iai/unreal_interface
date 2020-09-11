@@ -183,7 +183,7 @@ int UnrealInterface::Objects::SpawnedObjectCount()
 }
 
 bool UnrealInterface::Objects::SetObjectPose(UnrealInterface::Object::Id id, geometry_msgs::Pose pose) {
-    ROS_INFO_STREAM("Send object pose update to UE4");
+    ROS_INFO_STREAM("UnrealInterface::Objects::SetObjectPose :: Send object pose update to UE4");
 
     world_control_msgs::SetModelPose setmodelpose_srv;
 
