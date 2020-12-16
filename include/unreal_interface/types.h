@@ -5,6 +5,7 @@
 #include <iostream>
 #include <vector>
 #include <geometry_msgs/Pose.h>
+#include <geometry_msgs/Transform.h>
 
 namespace UnrealInterface::Object
 {
@@ -21,7 +22,7 @@ namespace UnrealInterface::Object
     std::string actor_name_;
 
     // In UE4 world coordinates
-    geometry_msgs::Pose pose_;
+    geometry_msgs::Transform transform_;
 
     void print(){
         std::cout << "Object " << id_ << ": actor_name_ " << actor_name_ << std::endl;

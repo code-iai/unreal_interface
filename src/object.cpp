@@ -26,7 +26,7 @@ void UnrealInterface::Objects::Init()
 
     pose_update_subscriber_ = n_.subscribe("/unreal_interface/object_poses",
             10,
-            &UnrealInterface::Objects::PoseUpdateCallback,
+            &UnrealInterface::Objects::TFUpdateCallback,
             this);
 }
 
@@ -314,6 +314,7 @@ bool UnrealInterface::Objects::DeleteAllSpawnedObjectsByTag()
   return true;
 }
 
+/*
 void UnrealInterface::Objects::PoseUpdateCallback(const geometry_msgs::PoseStamped& pose_stamped_msg)
 {
     std::string object_id = pose_stamped_msg.header.frame_id;
@@ -326,4 +327,22 @@ void UnrealInterface::Objects::PoseUpdateCallback(const geometry_msgs::PoseStamp
 
     std::lock_guard<std::mutex> guard(object_info_mutex_);
     spawned_objects_[object_id].pose_ = pose_stamped_msg.pose;
+}
+*/
+
+void UnrealInterface::Objects::TFUpdateCallback(const tf::tfMessage& tf_message)
+{
+    for (geometry_msgs::TransformStamped varTransform : tf_message.transforms)
+    {
+        std::string object_id = varTransform.header.frame_id;
+
+        if(spawned_objects_.count(object_id)==0)
+        {
+            ROS_INFO_STREAM("The given ID is not in the spawned object representation. Ignoring transform update");
+            return;
+        }
+
+        std::lock_guard<std::mutex> guard(object_info_mutex_);
+        spawned_objects_[object_id].transform_ = varTransform.transform;
+    }
 }

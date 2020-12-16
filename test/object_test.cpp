@@ -329,13 +329,13 @@ TEST(TestSuite, GetObjectPoseAsynchronously)
 
     // Request the pose info
     UnrealInterface::Object::ObjectInfo info = uio->GetObjectInfo(id_of_object_in_unreal);
-    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.position.x, info.pose_.position.x);
-    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.position.y, info.pose_.position.y);
-    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.position.z, info.pose_.position.z);
-    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.x, info.pose_.orientation.x);
-    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.y, info.pose_.orientation.y);
-    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.z, info.pose_.orientation.z);
-    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.w, info.pose_.orientation.w);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.position.x, info.transform_.translation.x);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.position.y, info.transform_.translation.y);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.position.z, info.transform_.translation.z);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.x, info.transform_.rotation.x);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.y, info.transform_.rotation.y);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.z, info.transform_.rotation.z);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.w, info.transform_.rotation.w);
 
 
     // Actual Set Model Pose stuff
@@ -370,13 +370,13 @@ TEST(TestSuite, GetObjectPoseAsynchronously)
 
     // Request the pose info again and check if it changed after the SetObjectPose
     UnrealInterface::Object::ObjectInfo info2 = uio->GetObjectInfo(id_of_object_in_unreal);
-    ASSERT_FLOAT_EQ(pose.position.x, info2.pose_.position.x);
-    ASSERT_FLOAT_EQ(pose.position.y, info2.pose_.position.y);
-    ASSERT_FLOAT_EQ(pose.position.z, info2.pose_.position.z);
-    ASSERT_FLOAT_EQ(pose.orientation.x, info2.pose_.orientation.x);
-    ASSERT_FLOAT_EQ(pose.orientation.y, info2.pose_.orientation.y);
-    ASSERT_FLOAT_EQ(pose.orientation.z, info2.pose_.orientation.z);
-    ASSERT_FLOAT_EQ(pose.orientation.w, info2.pose_.orientation.w);
+    ASSERT_FLOAT_EQ(pose.position.x, info2.transform_.translation.x);
+    ASSERT_FLOAT_EQ(pose.position.y, info2.transform_.translation.y);
+    ASSERT_FLOAT_EQ(pose.position.z, info2.transform_.translation.z);
+    ASSERT_FLOAT_EQ(pose.orientation.x, info2.transform_.rotation.x);
+    ASSERT_FLOAT_EQ(pose.orientation.y, info2.transform_.rotation.y);
+    ASSERT_FLOAT_EQ(pose.orientation.z, info2.transform_.rotation.z);
+    ASSERT_FLOAT_EQ(pose.orientation.w, info2.transform_.rotation.w);
 
     // Try to delete the same object again after a couple of secs
     ASSERT_TRUE(uio->DeleteObject(id_of_object_in_unreal));

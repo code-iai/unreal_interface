@@ -14,6 +14,8 @@
 
 #include <mutex>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <tf/tfMessage.h>
 
 namespace UnrealInterface
 {
@@ -182,7 +184,9 @@ protected:
      */
     bool DeleteModel(world_control_msgs::DeleteModel);
 
-    void PoseUpdateCallback(const geometry_msgs::PoseStamped&);
+    //void PoseUpdateCallback(const geometry_msgs::PoseStamped&);
+
+    void TFUpdateCallback(const tf::tfMessage&);
 };
 } // end of namespace
 #endif //UNREAL_INTERFACE_OBJECT_H
