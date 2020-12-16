@@ -102,6 +102,7 @@ public:
 
     bool DeleteObject(UnrealInterface::Object::Id id);
     bool DeleteObjects(std::vector<UnrealInterface::Object::Id> ids);
+    void CleanSpawnOnDelete(UnrealInterface::Object::Id id);
 
     /**
      * Sets the pose of a previously spawned object with the given UnrealInterface::Object::Id.

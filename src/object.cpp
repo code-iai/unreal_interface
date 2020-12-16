@@ -159,6 +159,14 @@ bool UnrealInterface::Objects::DeleteModel(world_control_msgs::DeleteModel model
     return true;
 }
 
+void UnrealInterface::Objects::CleanSpawnOnDelete(UnrealInterface::Object::Id id)
+{
+        // Case in case it's not possible to delete but it's available in the spawned array. Seek for better way
+        spawned_objects_.erase(id);
+        std::cout << "Cleaning up..."  << std::endl;
+
+}
+
 UnrealInterface::Object::ObjectInfo UnrealInterface::Objects::GetObjectInfo(UnrealInterface::Object::Id id)
 {
     if(spawned_objects_.count(id)==0)

@@ -383,6 +383,83 @@ TEST(TestSuite, GetObjectPoseAsynchronously)
     ros::Duration(1.0).sleep();
 }
 
+TEST(TestSuite, DeleteAllSpawnedObjects2)
+{
+    // Spawn Three Objects
+    world_control_msgs::SpawnModel spawn_model_srv;
+
+    spawn_model_srv.request.name = "AlbiHimbeerJuice"; // This is used to lookup the actual model
+
+    // Set pose in the UE4 world frame, but with ROS coordinate conventions
+    spawn_model_srv.request.pose.position.x = -0.60;
+    spawn_model_srv.request.pose.position.y = -2.40;
+    spawn_model_srv.request.pose.position.z = 1.00;
+    spawn_model_srv.request.pose.orientation.x = 0;
+    spawn_model_srv.request.pose.orientation.y = 0;
+    spawn_model_srv.request.pose.orientation.z = 0;
+    spawn_model_srv.request.pose.orientation.w = 1;
+
+    spawn_model_srv.request.actor_label = "DeleteObjet1";
+
+    UnrealInterface::Object::Id id_of_first_object_in_unreal;
+    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_first_object_in_unreal));
+
+    spawn_model_srv.request.pose.position.y = -2.60;
+    spawn_model_srv.request.actor_label = "DeleteObjet2";
+    UnrealInterface::Object::Id id_of_second_object_in_unreal;
+    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_second_object_in_unreal));
+
+    spawn_model_srv.request.pose.position.y = -2.10;
+    spawn_model_srv.request.actor_label = "DeleteObjet3";
+    UnrealInterface::Object::Id id_of_third_object_in_unreal;
+    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_third_object_in_unreal));
+
+    ASSERT_EQ(uio->SpawnedObjectCount(), 3);
+
+    ASSERT_TRUE(uio->DeleteAllSpawnedObjects());
+    ASSERT_EQ(uio->SpawnedObjectCount(), 0);
+}
+
+TEST(TestSuite, DeleteOnSpawn)
+{
+    // Spawn Three Objects
+    world_control_msgs::SpawnModel spawn_model_srv;
+
+    spawn_model_srv.request.name = "AlbiHimbeerJuice"; // This is used to lookup the actual model
+
+    // Set pose in the UE4 world frame, but with ROS coordinate conventions
+    spawn_model_srv.request.pose.position.x = -0.60;
+    spawn_model_srv.request.pose.position.y = -2.40;
+    spawn_model_srv.request.pose.position.z = 1.00;
+    spawn_model_srv.request.pose.orientation.x = 0;
+    spawn_model_srv.request.pose.orientation.y = 0;
+    spawn_model_srv.request.pose.orientation.z = 0;
+    spawn_model_srv.request.pose.orientation.w = 1;
+
+    spawn_model_srv.request.actor_label = "DeleteObjet1";
+
+    UnrealInterface::Object::Id id_of_first_object_in_unreal;
+    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_first_object_in_unreal));
+
+    spawn_model_srv.request.actor_label = "DeleteObjet2";
+    UnrealInterface::Object::Id id_of_second_object_in_unreal;
+    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_second_object_in_unreal));
+    uio->DeleteObject(id_of_second_object_in_unreal);
+
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+
+    ASSERT_EQ(uio->SpawnedObjectCount(), 1);
+    ASSERT_TRUE(uio->DeleteAllSpawnedObjects());
+    ASSERT_EQ(uio->SpawnedObjectCount(), 0);
+}
+
 // Run all the tests that were declared with TEST()
 int main(int argc, char **argv){
     testing::InitGoogleTest(&argc, argv);
