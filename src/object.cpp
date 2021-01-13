@@ -28,6 +28,10 @@ void UnrealInterface::Objects::Init()
             10,
             &UnrealInterface::Objects::TFUpdateCallback,
             this);
+    state_update_subscriber_ = n_.subscribe("/unreal_interface/state_publisher",
+            10,
+            &UnrealInterface::Objects::StringUpdateCallback,
+            this);
 }
 
 bool UnrealInterface::Objects::TransportAvailable()
@@ -345,4 +349,15 @@ void UnrealInterface::Objects::TFUpdateCallback(const tf::tfMessage& tf_message)
         std::lock_guard<std::mutex> guard(object_info_mutex_);
         spawned_objects_[object_id].transform_ = varTransform.transform;
     }
+}
+
+std::string UnrealInterface::Objects::GetStateString()
+{
+    return InputStateStream;
+}
+
+void UnrealInterface::Objects::StringUpdateCallback(const std_msgs::String& string_message)
+{
+    std::string data = string_message.data;
+    InputStateStream = data;
 }

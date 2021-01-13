@@ -15,6 +15,7 @@
 #include <mutex>
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
+#include <std_msgs/String.h>
 #include <tf/tfMessage.h>
 
 namespace UnrealInterface
@@ -44,6 +45,7 @@ private:
     ros::ServiceClient get_pose_client_;
     ros::ServiceClient delete_all_client_;
     ros::Subscriber pose_update_subscriber_;
+    ros::Subscriber state_update_subscriber_;
 
     std::string urosworldcontrol_domain_ = "pie_rwc";
 
@@ -55,6 +57,9 @@ private:
     float retry_delay_ = 0.4;
 
     std::map<UnrealInterface::Object::Id, UnrealInterface::Object::ObjectInfo> spawned_objects_;
+
+    // Nt beautiful way of doing it for now.
+    std::string InputStateStream;
 
 public:
     // Methods
@@ -148,6 +153,8 @@ public:
      */
     UnrealInterface::Object::ObjectInfo GetObjectInfo(UnrealInterface::Object::Id id);
 
+    std::string GetStateString();
+
     void PrintAllObjectInfo();
 
     /**
@@ -187,6 +194,8 @@ protected:
     //void PoseUpdateCallback(const geometry_msgs::PoseStamped&);
 
     void TFUpdateCallback(const tf::tfMessage&);
+
+    void StringUpdateCallback(const std_msgs::String&);
 };
 } // end of namespace
 #endif //UNREAL_INTERFACE_OBJECT_H
