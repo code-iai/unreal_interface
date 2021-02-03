@@ -529,7 +529,7 @@ TEST(TestSuite, TouchTest)
     ros::Duration(0.25).sleep();
     ros::spinOnce();
 
-    spawn_model_srv.request.pose.position.y = -2.4890;
+    spawn_model_srv.request.pose.position.y = -2.4850;
     spawn_model_srv.request.actor_label = "TestObject002";
     UnrealInterface::Object::Id id_of_second_object_in_unreal;
     ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_second_object_in_unreal));
@@ -540,6 +540,15 @@ TEST(TestSuite, TouchTest)
 
     // Todo bring in the call and check
     ASSERT_TRUE(uio->CheckTouchOnObjects());
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+
+    ASSERT_EQ(uio->GetTouchString(), "TestObject002_21");
+
     ASSERT_TRUE(uio->DeleteAllSpawnedObjects());
 }
 

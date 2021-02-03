@@ -34,6 +34,8 @@ void UnrealInterface::Objects::Init()
             10,
             &UnrealInterface::Objects::StringUpdateCallback,
             this);
+    touch_subscriber_ = n_.subscribe("/unreal_interface/physics_contact", 10, 
+        &UnrealInterface::Objects::TFStateUpdateCallback, this);
 }
 
 bool UnrealInterface::Objects::TransportAvailable()
@@ -374,6 +376,19 @@ void UnrealInterface::Objects::TFUpdateCallback(const tf::tfMessage& tf_message)
         std::lock_guard<std::mutex> guard(object_info_mutex_);
         spawned_objects_[object_id].transform_ = varTransform.transform;
     }
+}
+
+void UnrealInterface::Objects::TFStateUpdateCallback(const tf::tfMessage& tf_message)
+{
+    for (geometry_msgs::TransformStamped varTransform : tf_message.transforms)
+    {
+        TouchHappenings = varTransform.child_frame_id;
+    }
+}
+
+std::string UnrealInterface::Objects::GetTouchString()
+{
+    return TouchHappenings;
 }
 
 std::string UnrealInterface::Objects::GetStateString()
