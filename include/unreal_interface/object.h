@@ -16,6 +16,7 @@
 #include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <std_msgs/String.h>
+#include <std_srvs/SetBool.h>
 #include <tf/tfMessage.h>
 
 namespace UnrealInterface
@@ -34,6 +35,8 @@ private:
     // Constants
     const std::string DEFAULT_SPAWN_TAG_TYPE = "UnrealInterface";
     const std::string DEFAULT_SPAWN_TAG_KEY = "spawned";
+    const std::string ERROR_SPAWN_ID_NOT_UNIQUE = "1";
+    const std::string ERROR_SPAWN_OBSTRUCTED = "2";
 
 
 
@@ -44,8 +47,10 @@ private:
     ros::ServiceClient set_pose_client_;
     ros::ServiceClient get_pose_client_;
     ros::ServiceClient delete_all_client_;
+    ros::ServiceClient enable_check_touch_;
     ros::Subscriber pose_update_subscriber_;
     ros::Subscriber state_update_subscriber_;
+    ros::Subscriber touch_subscriber_;
 
     std::string urosworldcontrol_domain_ = "pie_rwc";
 
@@ -60,6 +65,8 @@ private:
 
     // Nt beautiful way of doing it for now.
     std::string InputStateStream;
+    // Even less beautiful way.
+    std::string TouchHappenings;
 
 public:
     // Methods
@@ -144,6 +151,11 @@ public:
     bool DeleteAllSpawnedObjectsByTag();
 
     /**
+    * Sends a single service request to check for touching objects.
+    */
+    bool EnableTouchChecker();
+
+    /**
      * Gets an data class that includes all the available information about an object.
      * Please note, that some of the attributes are filled asynchronously to speed up the execution.
      * So you might not have the most up2date data, especially if your update frequency in the UE4-side
@@ -154,6 +166,7 @@ public:
     UnrealInterface::Object::ObjectInfo GetObjectInfo(UnrealInterface::Object::Id id);
 
     std::string GetStateString();
+    std::string GetTouchString();
 
     void PrintAllObjectInfo();
 
@@ -194,6 +207,8 @@ protected:
     //void PoseUpdateCallback(const geometry_msgs::PoseStamped&);
 
     void TFUpdateCallback(const tf::tfMessage&);
+
+    void TFStateUpdateCallback(const tf::tfMessage&);
 
     void StringUpdateCallback(const std_msgs::String&);
 };

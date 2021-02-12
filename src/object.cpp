@@ -23,7 +23,7 @@ void UnrealInterface::Objects::Init()
             n_.serviceClient<world_control_msgs::SetModelPose>(urosworldcontrol_domain_ + "/set_model_pose");
     get_pose_client_ =
             n_.serviceClient<world_control_msgs::GetModelPose>(urosworldcontrol_domain_ + "/get_model_pose");
-    check_touch_ =
+    enable_check_touch_ =
             n_.serviceClient<std_srvs::SetBool>("/unreal_interface/call_touching");
 
     pose_update_subscriber_ = n_.subscribe("/unreal_interface/object_poses",
@@ -46,7 +46,7 @@ bool UnrealInterface::Objects::TransportAvailable()
             set_pose_client_.exists() &&
             get_pose_client_.exists() &&
             delete_all_client_.exists() &&
-            check_touch_.exists()
+            enable_check_touch_.exists()
     );
 }
 
@@ -76,11 +76,11 @@ bool UnrealInterface::Objects::SpawnObject(world_control_msgs::SpawnModel model,
     //check the status of the respond from the server
     if (!model.response.success)
     {
-        if (model.response.etype == "1")
+        if (model.response.etype == ERROR_SPAWN_ID_NOT_UNIQUE)
         {
             ROS_ERROR("Spawnmodel Error01: Object is not unique and wasn't spawned.");
         }
-        else if (model.response.etype == "2")
+        else if (model.response.etype == ERROR_SPAWN_OBSTRUCTED)
         {
             ROS_ERROR("Spawnmodel Error02: Object Spawnlocation is obstructed and wasn't spawned.");
         }
@@ -330,13 +330,13 @@ bool UnrealInterface::Objects::DeleteAllSpawnedObjectsByTag()
   return true;
 }
 
-bool UnrealInterface::Objects::CheckTouchOnObjects()
+bool UnrealInterface::Objects::EnableTouchChecker()
 {
     ROS_INFO_STREAM("Activating the Touchbool.");
 
     std_srvs::SetBool srv;
     srv.request.data = true;
-    if(!check_touch_.call(srv)) 
+    if(!enable_check_touch_.call(srv)) 
     {
         ROS_INFO("CheckTouch service Returned false");
         return false;
