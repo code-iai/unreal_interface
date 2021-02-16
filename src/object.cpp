@@ -51,7 +51,7 @@ bool UnrealInterface::Objects::TransportAvailable()
 }
 
 
-bool UnrealInterface::Objects::SpawnObject(world_control_msgs::SpawnModel model, UnrealInterface::Object::Id *id_of_spawned_object = nullptr)
+int UnrealInterface::Objects::SpawnObject(world_control_msgs::SpawnModel model, UnrealInterface::Object::Id *id_of_spawned_object = nullptr)
 {
     // Add additional information to the request that is necessary for the functionality
     // of UnrealInterface.
@@ -78,13 +78,14 @@ bool UnrealInterface::Objects::SpawnObject(world_control_msgs::SpawnModel model,
     {
         if (model.response.etype == ERROR_SPAWN_ID_NOT_UNIQUE)
         {
-            ROS_ERROR("Spawnmodel Error01: Object is not unique and wasn't spawned.");
+            ROS_ERROR("Spawnmodel Error01: Input ID is not unique and thus wasn't spawned.");
+            return 1;
         }
         else if (model.response.etype == ERROR_SPAWN_OBSTRUCTED)
         {
-            ROS_ERROR("Spawnmodel Error02: Object Spawnlocation is obstructed and wasn't spawned.");
+            ROS_ERROR("Spawnmodel Error02: Input Location is obstructed by another object. Wasn't Spawned.");
+            return 2;
         }
-        return false;
     }
 
     //save object in object map
@@ -103,7 +104,7 @@ bool UnrealInterface::Objects::SpawnObject(world_control_msgs::SpawnModel model,
         *id_of_spawned_object = model.response.id;
     }
 
-    return true;
+    return 0;
 }
 
 
@@ -344,22 +345,6 @@ bool UnrealInterface::Objects::EnableTouchChecker()
 
     return true;
 }
-
-/*
-void UnrealInterface::Objects::PoseUpdateCallback(const geometry_msgs::PoseStamped& pose_stamped_msg)
-{
-    std::string object_id = pose_stamped_msg.header.frame_id;
-
-    if(spawned_objects_.count(object_id)==0)
-    {
-        ROS_INFO_STREAM("The given ID is not in the spawned object representation. Ignoring pose update");
-        return;
-    }
-
-    std::lock_guard<std::mutex> guard(object_info_mutex_);
-    spawned_objects_[object_id].pose_ = pose_stamped_msg.pose;
-}
-*/
 
 void UnrealInterface::Objects::TFUpdateCallback(const tf::tfMessage& tf_message)
 {

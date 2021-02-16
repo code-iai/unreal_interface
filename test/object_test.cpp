@@ -41,7 +41,7 @@ TEST(TestSuite, SpawnObject)
 
     // Last step. Spawn the actual model.
     UnrealInterface::Object::Id id_of_object_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal), 0);
 
     ASSERT_EQ(uio->SpawnedObjectCount(), 1);
     uio->PrintAllObjectInfo();
@@ -82,7 +82,7 @@ TEST(TestSuite, SetObjectPose)
 
     // Last step. Spawn the actual model.
     UnrealInterface::Object::Id id_of_object_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal), 0);
 
     ASSERT_EQ(uio->SpawnedObjectCount(), 1);
 
@@ -142,7 +142,7 @@ TEST(TestSuite, DeleteAllSpawnedObjects)
 
     // Last step. Spawn the actual model.
     UnrealInterface::Object::Id id_of_object_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal), 0);
 
     ////////////////// Second Object //////////////////
     ///////////////////////////////////////////////////
@@ -167,7 +167,7 @@ TEST(TestSuite, DeleteAllSpawnedObjects)
 
     // Last step. Spawn the actual model.
     UnrealInterface::Object::Id id_of_object2_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv2, &id_of_object2_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv2, &id_of_object2_in_unreal), 0);
 
     ASSERT_EQ(uio->SpawnedObjectCount(), 2);
     uio->PrintAllObjectInfo();
@@ -203,7 +203,7 @@ TEST(TestSuite, DeleteAllSpawnedObjectsByTag)
 
   // Last step. Spawn the actual model.
   UnrealInterface::Object::Id id_of_object_in_unreal;
-  ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal));
+  ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal), 0);
 
   ////////////////// Second Object //////////////////
   ///////////////////////////////////////////////////
@@ -228,7 +228,7 @@ TEST(TestSuite, DeleteAllSpawnedObjectsByTag)
 
   // Last step. Spawn the actual model.
   UnrealInterface::Object::Id id_of_object2_in_unreal;
-  ASSERT_TRUE(uio->SpawnObject(spawn_model_srv2, &id_of_object2_in_unreal));
+  ASSERT_EQ(uio->SpawnObject(spawn_model_srv2, &id_of_object2_in_unreal), 0);
 
   ASSERT_EQ(uio->SpawnedObjectCount(), 2);
   uio->PrintAllObjectInfo();
@@ -263,7 +263,7 @@ TEST(TestSuite, GetObjectPose)
 
     // Last step. Spawn the actual model.
     UnrealInterface::Object::Id id_of_object_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal), 0);
     ASSERT_EQ(uio->SpawnedObjectCount(), 1);
 
     ros::Duration(1.0).sleep();
@@ -310,7 +310,7 @@ TEST(TestSuite, GetObjectPoseAsynchronously)
 
     // Last step. Spawn the actual model.
     UnrealInterface::Object::Id id_of_object_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal), 0);
     ASSERT_EQ(uio->SpawnedObjectCount(), 1);
 
     // Sleep for a while so we definitely get an update even with the slow default update rate
@@ -402,17 +402,17 @@ TEST(TestSuite, DeleteAllSpawnedObjects2)
     spawn_model_srv.request.actor_label = "DeleteObjet1";
 
     UnrealInterface::Object::Id id_of_first_object_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_first_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_first_object_in_unreal), 0);
 
     spawn_model_srv.request.pose.position.y = -2.60;
     spawn_model_srv.request.actor_label = "DeleteObjet2";
     UnrealInterface::Object::Id id_of_second_object_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_second_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_second_object_in_unreal), 0);
 
     spawn_model_srv.request.pose.position.y = -2.10;
     spawn_model_srv.request.actor_label = "DeleteObjet3";
     UnrealInterface::Object::Id id_of_third_object_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_third_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_third_object_in_unreal), 0);
 
     ASSERT_EQ(uio->SpawnedObjectCount(), 3);
 
@@ -420,7 +420,7 @@ TEST(TestSuite, DeleteAllSpawnedObjects2)
     ASSERT_EQ(uio->SpawnedObjectCount(), 0);
 }
 
-TEST(TestSuite, DeleteOnSpawn)
+TEST(TestSuite, DeleteOnSpawnDueToObstruction)
 {
     // Spawn Three Objects
     world_control_msgs::SpawnModel spawn_model_srv;
@@ -439,11 +439,11 @@ TEST(TestSuite, DeleteOnSpawn)
     spawn_model_srv.request.actor_label = "DeleteObjet1";
 
     UnrealInterface::Object::Id id_of_first_object_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_first_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_first_object_in_unreal), 0);
 
     spawn_model_srv.request.actor_label = "DeleteObjet2";
     UnrealInterface::Object::Id id_of_second_object_in_unreal;
-    ASSERT_FALSE(uio->SpawnObject(spawn_model_srv, &id_of_second_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_second_object_in_unreal), 2);
     uio->DeleteObject(id_of_second_object_in_unreal);
 
     ros::Duration(0.25).sleep();
@@ -479,7 +479,7 @@ TEST(TestSuite, StateOfObjects)
     spawn_model_srv.request.actor_label = "TestObject001";
 
     UnrealInterface::Object::Id id_of_first_object_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_first_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_first_object_in_unreal), 0);
     ros::Duration(0.25).sleep();
     ros::spinOnce();
     ros::Duration(0.25).sleep();
@@ -493,7 +493,7 @@ TEST(TestSuite, StateOfObjects)
     spawn_model_srv.request.pose.position.z = 0.3;
     spawn_model_srv.request.actor_label = "TestObject002";
     UnrealInterface::Object::Id id_of_second_object_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_second_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_second_object_in_unreal), 0);
     ros::Duration(0.25).sleep();
     ros::spinOnce();
     ros::Duration(0.25).sleep();
@@ -523,7 +523,7 @@ TEST(TestSuite, TouchTest)
     spawn_model_srv.request.actor_label = "TestObject001";
 
     UnrealInterface::Object::Id id_of_first_object_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_first_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_first_object_in_unreal), 0);
     ros::Duration(0.25).sleep();
     ros::spinOnce();
     ros::Duration(0.25).sleep();
@@ -532,14 +532,14 @@ TEST(TestSuite, TouchTest)
     spawn_model_srv.request.pose.position.y = -2.4850;
     spawn_model_srv.request.actor_label = "TestObject002";
     UnrealInterface::Object::Id id_of_second_object_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_second_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_second_object_in_unreal), 0);
     ros::Duration(0.25).sleep();
     ros::spinOnce();
     ros::Duration(0.25).sleep();
     ros::spinOnce();
 
     // Todo bring in the call and check
-    ASSERT_TRUE(uio->CheckTouchOnObjects());
+    ASSERT_TRUE(uio->EnableTouchChecker());
     ros::Duration(0.25).sleep();
     ros::spinOnce();
     ros::Duration(0.25).sleep();
