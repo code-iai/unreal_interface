@@ -503,55 +503,6 @@ TEST(TestSuite, StateOfObjects)
     uio->DeleteAllSpawnedObjects();
 }
 
-TEST(TestSuite, TouchTest)
-{
-    // Spawn Three Objects
-    world_control_msgs::SpawnModel spawn_model_srv;
-
-    spawn_model_srv.request.name = "AlbiHimbeerJuice"; // This is used to lookup the actual model
-
-    // Set pose in the UE4 world frame, but with ROS coordinate conventions
-    spawn_model_srv.request.pose.position.x = -0.5754;
-    spawn_model_srv.request.pose.position.y = -2.5622;
-    spawn_model_srv.request.pose.position.z = 1.00;
-    spawn_model_srv.request.pose.orientation.x = 0;
-    spawn_model_srv.request.pose.orientation.y = 0;
-    spawn_model_srv.request.pose.orientation.z = 0;
-    spawn_model_srv.request.pose.orientation.w = 1;
-    spawn_model_srv.request.physics_properties.generate_overlap_events = true;
-
-    spawn_model_srv.request.actor_label = "TestObject001";
-
-    UnrealInterface::Object::Id id_of_first_object_in_unreal;
-    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_first_object_in_unreal), 0);
-    ros::Duration(0.25).sleep();
-    ros::spinOnce();
-    ros::Duration(0.25).sleep();
-    ros::spinOnce();
-
-    spawn_model_srv.request.pose.position.y = -2.4850;
-    spawn_model_srv.request.actor_label = "TestObject002";
-    UnrealInterface::Object::Id id_of_second_object_in_unreal;
-    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_second_object_in_unreal), 0);
-    ros::Duration(0.25).sleep();
-    ros::spinOnce();
-    ros::Duration(0.25).sleep();
-    ros::spinOnce();
-
-    // Todo bring in the call and check
-    ASSERT_TRUE(uio->EnableTouchChecker());
-    ros::Duration(0.25).sleep();
-    ros::spinOnce();
-    ros::Duration(0.25).sleep();
-    ros::spinOnce();
-    ros::Duration(0.25).sleep();
-    ros::spinOnce();
-
-    ASSERT_EQ(uio->GetTouchString(), "TestObject002_21");
-
-    ASSERT_TRUE(uio->DeleteAllSpawnedObjects());
-}
-
 // Run all the tests that were declared with TEST()
 int main(int argc, char **argv){
     testing::InitGoogleTest(&argc, argv);

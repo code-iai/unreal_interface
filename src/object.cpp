@@ -23,8 +23,6 @@ void UnrealInterface::Objects::Init()
             n_.serviceClient<world_control_msgs::SetModelPose>(urosworldcontrol_domain_ + "/set_model_pose");
     get_pose_client_ =
             n_.serviceClient<world_control_msgs::GetModelPose>(urosworldcontrol_domain_ + "/get_model_pose");
-    enable_check_touch_ =
-            n_.serviceClient<std_srvs::SetBool>("/unreal_interface/call_touching");
 
     pose_update_subscriber_ = n_.subscribe("/unreal_interface/object_poses",
             10,
@@ -34,8 +32,6 @@ void UnrealInterface::Objects::Init()
             10,
             &UnrealInterface::Objects::StringUpdateCallback,
             this);
-    touch_subscriber_ = n_.subscribe("/unreal_interface/physics_contact", 10, 
-        &UnrealInterface::Objects::TFStateUpdateCallback, this);
 }
 
 bool UnrealInterface::Objects::TransportAvailable()
@@ -45,8 +41,7 @@ bool UnrealInterface::Objects::TransportAvailable()
             delete_client_.exists() &&
             set_pose_client_.exists() &&
             get_pose_client_.exists() &&
-            delete_all_client_.exists() &&
-            enable_check_touch_.exists()
+            delete_all_client_.exists()
     );
 }
 
@@ -329,21 +324,6 @@ bool UnrealInterface::Objects::DeleteAllSpawnedObjectsByTag()
   spawned_objects_.clear();
 
   return true;
-}
-
-bool UnrealInterface::Objects::EnableTouchChecker()
-{
-    ROS_INFO_STREAM("Activating the Touchbool.");
-
-    std_srvs::SetBool srv;
-    srv.request.data = true;
-    if(!enable_check_touch_.call(srv)) 
-    {
-        ROS_INFO("CheckTouch service Returned false");
-        return false;
-    }
-
-    return true;
 }
 
 void UnrealInterface::Objects::TFUpdateCallback(const tf::tfMessage& tf_message)
