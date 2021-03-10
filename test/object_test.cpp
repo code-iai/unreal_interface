@@ -460,49 +460,6 @@ TEST(TestSuite, DeleteOnSpawnDueToObstruction)
     ASSERT_EQ(uio->SpawnedObjectCount(), 0);
 }
 
-TEST(TestSuite, StateOfObjects)
-{
-    // Spawn Two Objects
-    world_control_msgs::SpawnModel spawn_model_srv;
-
-    spawn_model_srv.request.name = "AlbiHimbeerJuice"; // This is used to lookup the actual model
-
-    // Set pose in the UE4 world frame, but with ROS coordinate conventions
-    spawn_model_srv.request.pose.position.x = -0.60;
-    spawn_model_srv.request.pose.position.y = -2.40;
-    spawn_model_srv.request.pose.position.z = 1.00;
-    spawn_model_srv.request.pose.orientation.x = 0;
-    spawn_model_srv.request.pose.orientation.y = 0;
-    spawn_model_srv.request.pose.orientation.z = 0;
-    spawn_model_srv.request.pose.orientation.w = 1;
-
-    spawn_model_srv.request.actor_label = "TestObject001";
-
-    UnrealInterface::Object::Id id_of_first_object_in_unreal;
-    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_first_object_in_unreal), 0);
-    ros::Duration(0.25).sleep();
-    ros::spinOnce();
-    ros::Duration(0.25).sleep();
-    ros::spinOnce();
-    ASSERT_EQ(uio->GetStateString(), "{ name:TestObject001, state:BELOW }");
-
-    uio->DeleteAllSpawnedObjects();
-
-    spawn_model_srv.request.pose.position.x = -0.01;
-    spawn_model_srv.request.pose.position.y = -2.40;
-    spawn_model_srv.request.pose.position.z = 0.3;
-    spawn_model_srv.request.actor_label = "TestObject002";
-    UnrealInterface::Object::Id id_of_second_object_in_unreal;
-    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_second_object_in_unreal), 0);
-    ros::Duration(0.25).sleep();
-    ros::spinOnce();
-    ros::Duration(0.25).sleep();
-    ros::spinOnce();
-    ASSERT_EQ(uio->GetStateString(), "{ name:TestObject002, state:ABOVE }");
-
-    uio->DeleteAllSpawnedObjects();
-}
-
 // Run all the tests that were declared with TEST()
 int main(int argc, char **argv){
     testing::InitGoogleTest(&argc, argv);
