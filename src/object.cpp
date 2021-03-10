@@ -26,7 +26,11 @@ void UnrealInterface::Objects::Init()
 
     pose_update_subscriber_ = n_.subscribe("/unreal_interface/object_poses",
             10,
-            &UnrealInterface::Objects::PoseUpdateCallback,
+            &UnrealInterface::Objects::TFUpdateCallback,
+            this);
+    state_update_subscriber_ = n_.subscribe("/unreal_interface/state_publisher",
+            10,
+            &UnrealInterface::Objects::StringUpdateCallback,
             this);
 }
 
@@ -42,7 +46,7 @@ bool UnrealInterface::Objects::TransportAvailable()
 }
 
 
-bool UnrealInterface::Objects::SpawnObject(world_control_msgs::SpawnModel model, UnrealInterface::Object::Id *id_of_spawned_object = nullptr)
+int UnrealInterface::Objects::SpawnObject(world_control_msgs::SpawnModel model, UnrealInterface::Object::Id *id_of_spawned_object = nullptr)
 {
     // Add additional information to the request that is necessary for the functionality
     // of UnrealInterface.
@@ -67,8 +71,16 @@ bool UnrealInterface::Objects::SpawnObject(world_control_msgs::SpawnModel model,
     //check the status of the respond from the server
     if (!model.response.success)
     {
-        ROS_ERROR("Spawn Service call returned false");
-        return false;
+        if (model.response.etype == ERROR_SPAWN_ID_NOT_UNIQUE)
+        {
+            ROS_ERROR("Spawnmodel Error01: Input ID is not unique and thus wasn't spawned.");
+            return 1;
+        }
+        else if (model.response.etype == ERROR_SPAWN_OBSTRUCTED)
+        {
+            ROS_ERROR("Spawnmodel Error02: Input Location is obstructed by another object. Wasn't Spawned.");
+            return 2;
+        }
     }
 
     //save object in object map
@@ -87,7 +99,7 @@ bool UnrealInterface::Objects::SpawnObject(world_control_msgs::SpawnModel model,
         *id_of_spawned_object = model.response.id;
     }
 
-    return true;
+    return 0;
 }
 
 
@@ -157,6 +169,14 @@ bool UnrealInterface::Objects::DeleteModel(world_control_msgs::DeleteModel model
 
 
     return true;
+}
+
+void UnrealInterface::Objects::CleanSpawnOnDelete(UnrealInterface::Object::Id id)
+{
+        // Case in case it's not possible to delete but it's available in the spawned array. Seek for better way
+        spawned_objects_.erase(id);
+        std::cout << "Cleaning up..."  << std::endl;
+
 }
 
 UnrealInterface::Object::ObjectInfo UnrealInterface::Objects::GetObjectInfo(UnrealInterface::Object::Id id)
@@ -306,16 +326,43 @@ bool UnrealInterface::Objects::DeleteAllSpawnedObjectsByTag()
   return true;
 }
 
-void UnrealInterface::Objects::PoseUpdateCallback(const geometry_msgs::PoseStamped& pose_stamped_msg)
+void UnrealInterface::Objects::TFUpdateCallback(const tf::tfMessage& tf_message)
 {
-    std::string object_id = pose_stamped_msg.header.frame_id;
-
-    if(spawned_objects_.count(object_id)==0)
+    for (geometry_msgs::TransformStamped varTransform : tf_message.transforms)
     {
-        ROS_INFO_STREAM("The given ID is not in the spawned object representation. Ignoring pose update");
-        return;
-    }
+        std::string object_id = varTransform.header.frame_id;
 
-    std::lock_guard<std::mutex> guard(object_info_mutex_);
-    spawned_objects_[object_id].pose_ = pose_stamped_msg.pose;
+        if(spawned_objects_.count(object_id)==0)
+        {
+            ROS_INFO_STREAM("The given ID is not in the spawned object representation. Ignoring transform update");
+            return;
+        }
+
+        std::lock_guard<std::mutex> guard(object_info_mutex_);
+        spawned_objects_[object_id].transform_ = varTransform.transform;
+    }
+}
+
+void UnrealInterface::Objects::TFStateUpdateCallback(const tf::tfMessage& tf_message)
+{
+    for (geometry_msgs::TransformStamped varTransform : tf_message.transforms)
+    {
+        TouchHappenings = varTransform.child_frame_id;
+    }
+}
+
+std::string UnrealInterface::Objects::GetTouchString()
+{
+    return TouchHappenings;
+}
+
+std::string UnrealInterface::Objects::GetStateString()
+{
+    return InputStateStream;
+}
+
+void UnrealInterface::Objects::StringUpdateCallback(const std_msgs::String& string_message)
+{
+    std::string data = string_message.data;
+    InputStateStream = data;
 }

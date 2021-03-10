@@ -41,7 +41,7 @@ TEST(TestSuite, SpawnObject)
 
     // Last step. Spawn the actual model.
     UnrealInterface::Object::Id id_of_object_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal), 0);
 
     ASSERT_EQ(uio->SpawnedObjectCount(), 1);
     uio->PrintAllObjectInfo();
@@ -82,7 +82,7 @@ TEST(TestSuite, SetObjectPose)
 
     // Last step. Spawn the actual model.
     UnrealInterface::Object::Id id_of_object_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal), 0);
 
     ASSERT_EQ(uio->SpawnedObjectCount(), 1);
 
@@ -142,7 +142,7 @@ TEST(TestSuite, DeleteAllSpawnedObjects)
 
     // Last step. Spawn the actual model.
     UnrealInterface::Object::Id id_of_object_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal), 0);
 
     ////////////////// Second Object //////////////////
     ///////////////////////////////////////////////////
@@ -167,7 +167,7 @@ TEST(TestSuite, DeleteAllSpawnedObjects)
 
     // Last step. Spawn the actual model.
     UnrealInterface::Object::Id id_of_object2_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv2, &id_of_object2_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv2, &id_of_object2_in_unreal), 0);
 
     ASSERT_EQ(uio->SpawnedObjectCount(), 2);
     uio->PrintAllObjectInfo();
@@ -203,7 +203,7 @@ TEST(TestSuite, DeleteAllSpawnedObjectsByTag)
 
   // Last step. Spawn the actual model.
   UnrealInterface::Object::Id id_of_object_in_unreal;
-  ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal));
+  ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal), 0);
 
   ////////////////// Second Object //////////////////
   ///////////////////////////////////////////////////
@@ -228,7 +228,7 @@ TEST(TestSuite, DeleteAllSpawnedObjectsByTag)
 
   // Last step. Spawn the actual model.
   UnrealInterface::Object::Id id_of_object2_in_unreal;
-  ASSERT_TRUE(uio->SpawnObject(spawn_model_srv2, &id_of_object2_in_unreal));
+  ASSERT_EQ(uio->SpawnObject(spawn_model_srv2, &id_of_object2_in_unreal), 0);
 
   ASSERT_EQ(uio->SpawnedObjectCount(), 2);
   uio->PrintAllObjectInfo();
@@ -263,7 +263,7 @@ TEST(TestSuite, GetObjectPose)
 
     // Last step. Spawn the actual model.
     UnrealInterface::Object::Id id_of_object_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal), 0);
     ASSERT_EQ(uio->SpawnedObjectCount(), 1);
 
     ros::Duration(1.0).sleep();
@@ -310,7 +310,7 @@ TEST(TestSuite, GetObjectPoseAsynchronously)
 
     // Last step. Spawn the actual model.
     UnrealInterface::Object::Id id_of_object_in_unreal;
-    ASSERT_TRUE(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal));
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_object_in_unreal), 0);
     ASSERT_EQ(uio->SpawnedObjectCount(), 1);
 
     // Sleep for a while so we definitely get an update even with the slow default update rate
@@ -329,13 +329,13 @@ TEST(TestSuite, GetObjectPoseAsynchronously)
 
     // Request the pose info
     UnrealInterface::Object::ObjectInfo info = uio->GetObjectInfo(id_of_object_in_unreal);
-    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.position.x, info.pose_.position.x);
-    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.position.y, info.pose_.position.y);
-    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.position.z, info.pose_.position.z);
-    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.x, info.pose_.orientation.x);
-    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.y, info.pose_.orientation.y);
-    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.z, info.pose_.orientation.z);
-    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.w, info.pose_.orientation.w);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.position.x, info.transform_.translation.x);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.position.y, info.transform_.translation.y);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.position.z, info.transform_.translation.z);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.x, info.transform_.rotation.x);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.y, info.transform_.rotation.y);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.z, info.transform_.rotation.z);
+    ASSERT_FLOAT_EQ(spawn_model_srv.request.pose.orientation.w, info.transform_.rotation.w);
 
 
     // Actual Set Model Pose stuff
@@ -370,17 +370,94 @@ TEST(TestSuite, GetObjectPoseAsynchronously)
 
     // Request the pose info again and check if it changed after the SetObjectPose
     UnrealInterface::Object::ObjectInfo info2 = uio->GetObjectInfo(id_of_object_in_unreal);
-    ASSERT_FLOAT_EQ(pose.position.x, info2.pose_.position.x);
-    ASSERT_FLOAT_EQ(pose.position.y, info2.pose_.position.y);
-    ASSERT_FLOAT_EQ(pose.position.z, info2.pose_.position.z);
-    ASSERT_FLOAT_EQ(pose.orientation.x, info2.pose_.orientation.x);
-    ASSERT_FLOAT_EQ(pose.orientation.y, info2.pose_.orientation.y);
-    ASSERT_FLOAT_EQ(pose.orientation.z, info2.pose_.orientation.z);
-    ASSERT_FLOAT_EQ(pose.orientation.w, info2.pose_.orientation.w);
+    ASSERT_FLOAT_EQ(pose.position.x, info2.transform_.translation.x);
+    ASSERT_FLOAT_EQ(pose.position.y, info2.transform_.translation.y);
+    ASSERT_FLOAT_EQ(pose.position.z, info2.transform_.translation.z);
+    ASSERT_FLOAT_EQ(pose.orientation.x, info2.transform_.rotation.x);
+    ASSERT_FLOAT_EQ(pose.orientation.y, info2.transform_.rotation.y);
+    ASSERT_FLOAT_EQ(pose.orientation.z, info2.transform_.rotation.z);
+    ASSERT_FLOAT_EQ(pose.orientation.w, info2.transform_.rotation.w);
 
     // Try to delete the same object again after a couple of secs
     ASSERT_TRUE(uio->DeleteObject(id_of_object_in_unreal));
     ros::Duration(1.0).sleep();
+}
+
+TEST(TestSuite, DeleteAllSpawnedObjects2)
+{
+    // Spawn Three Objects
+    world_control_msgs::SpawnModel spawn_model_srv;
+
+    spawn_model_srv.request.name = "AlbiHimbeerJuice"; // This is used to lookup the actual model
+
+    // Set pose in the UE4 world frame, but with ROS coordinate conventions
+    spawn_model_srv.request.pose.position.x = -0.60;
+    spawn_model_srv.request.pose.position.y = -2.40;
+    spawn_model_srv.request.pose.position.z = 1.00;
+    spawn_model_srv.request.pose.orientation.x = 0;
+    spawn_model_srv.request.pose.orientation.y = 0;
+    spawn_model_srv.request.pose.orientation.z = 0;
+    spawn_model_srv.request.pose.orientation.w = 1;
+
+    spawn_model_srv.request.actor_label = "DeleteObjet1";
+
+    UnrealInterface::Object::Id id_of_first_object_in_unreal;
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_first_object_in_unreal), 0);
+
+    spawn_model_srv.request.pose.position.y = -2.60;
+    spawn_model_srv.request.actor_label = "DeleteObjet2";
+    UnrealInterface::Object::Id id_of_second_object_in_unreal;
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_second_object_in_unreal), 0);
+
+    spawn_model_srv.request.pose.position.y = -2.10;
+    spawn_model_srv.request.actor_label = "DeleteObjet3";
+    UnrealInterface::Object::Id id_of_third_object_in_unreal;
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_third_object_in_unreal), 0);
+
+    ASSERT_EQ(uio->SpawnedObjectCount(), 3);
+
+    ASSERT_TRUE(uio->DeleteAllSpawnedObjects());
+    ASSERT_EQ(uio->SpawnedObjectCount(), 0);
+}
+
+TEST(TestSuite, DeleteOnSpawnDueToObstruction)
+{
+    // Spawn Three Objects
+    world_control_msgs::SpawnModel spawn_model_srv;
+
+    spawn_model_srv.request.name = "AlbiHimbeerJuice"; // This is used to lookup the actual model
+
+    // Set pose in the UE4 world frame, but with ROS coordinate conventions
+    spawn_model_srv.request.pose.position.x = -0.60;
+    spawn_model_srv.request.pose.position.y = -2.40;
+    spawn_model_srv.request.pose.position.z = 1.00;
+    spawn_model_srv.request.pose.orientation.x = 0;
+    spawn_model_srv.request.pose.orientation.y = 0;
+    spawn_model_srv.request.pose.orientation.z = 0;
+    spawn_model_srv.request.pose.orientation.w = 1;
+
+    spawn_model_srv.request.actor_label = "DeleteObjet1";
+
+    UnrealInterface::Object::Id id_of_first_object_in_unreal;
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_first_object_in_unreal), 0);
+
+    spawn_model_srv.request.actor_label = "DeleteObjet2";
+    UnrealInterface::Object::Id id_of_second_object_in_unreal;
+    ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_second_object_in_unreal), 2);
+    uio->DeleteObject(id_of_second_object_in_unreal);
+
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+    ros::Duration(0.25).sleep();
+    ros::spinOnce();
+
+    ASSERT_EQ(uio->SpawnedObjectCount(), 1);
+    ASSERT_TRUE(uio->DeleteAllSpawnedObjects());
+    ASSERT_EQ(uio->SpawnedObjectCount(), 0);
 }
 
 // Run all the tests that were declared with TEST()
