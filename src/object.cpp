@@ -65,7 +65,7 @@ int UnrealInterface::Objects::SpawnObject(world_control_msgs::SpawnModel model, 
     if (!spawn_client_.call(model))
     {
         ROS_ERROR("Failed to call service spawn");
-        return false;
+        return -1;
     }
 
     //check the status of the respond from the server
@@ -338,8 +338,18 @@ void UnrealInterface::Objects::TFUpdateCallback(const tf::tfMessage& tf_message)
             return;
         }
 
+        // Having pose updates as transforms is just a communication detail
+        // We'll transform that to a pose for the datastructure that gets exposed
+        // to the user
         std::lock_guard<std::mutex> guard(object_info_mutex_);
-        spawned_objects_[object_id].transform_ = varTransform.transform;
+        spawned_objects_[object_id].pose_ = geometry_msgs::Pose();
+        spawned_objects_[object_id].pose_.position.x    = varTransform.transform.translation.x;
+        spawned_objects_[object_id].pose_.position.y    = varTransform.transform.translation.y;
+        spawned_objects_[object_id].pose_.position.z    = varTransform.transform.translation.z;
+        spawned_objects_[object_id].pose_.orientation.x = varTransform.transform.rotation.x;
+        spawned_objects_[object_id].pose_.orientation.y = varTransform.transform.rotation.y;
+        spawned_objects_[object_id].pose_.orientation.z = varTransform.transform.rotation.z;
+        spawned_objects_[object_id].pose_.orientation.w = varTransform.transform.rotation.w;
     }
 }
 

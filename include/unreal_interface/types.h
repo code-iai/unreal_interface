@@ -22,7 +22,7 @@ namespace UnrealInterface::Object
     std::string actor_name_;
 
     // In UE4 world coordinates
-    geometry_msgs::Transform transform_;
+    geometry_msgs::Pose pose_;
 
     void print(){
         std::cout << "Object " << id_ << ": actor_name_ " << actor_name_ << std::endl;

@@ -100,7 +100,7 @@ public:
      * @param model The model that should be spawned in the Belief State.
      *        id_of_spawned_objects If a pointer is given and the service call is successful,
      *                   the method will place the returned id of the spawned object in thatpointer.
-     * @return 0 if there was no error, 1 if there was an Id Problem, 2 if there was an obstruction problem.
+     * @return 0 if there was no error, -1 if the service can't be called. 1 if there was an Id Problem, 2 if there was an obstruction problem
      */
     int SpawnObject(world_control_msgs::SpawnModel model, UnrealInterface::Object::Id *id_of_spawned_object);
 
