@@ -442,6 +442,7 @@ TEST(TestSuite, DeleteOnSpawnDueToObstruction)
     ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_first_object_in_unreal), 0);
 
     spawn_model_srv.request.actor_label = "DeleteObjet2";
+    spawn_model_srv.request.spawn_collision_check = true;
     UnrealInterface::Object::Id id_of_second_object_in_unreal;
     ASSERT_EQ(uio->SpawnObject(spawn_model_srv, &id_of_second_object_in_unreal), 2);
     uio->DeleteObject(id_of_second_object_in_unreal);
