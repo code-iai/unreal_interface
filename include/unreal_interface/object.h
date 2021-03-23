@@ -8,6 +8,7 @@
 
 #include <world_control_msgs/SpawnModel.h>
 #include <world_control_msgs/GetModelPose.h>
+#include <world_control_msgs/GetModelSocketPose.h>
 #include <world_control_msgs/SetModelPose.h>
 #include <world_control_msgs/DeleteAll.h>
 #include <world_control_msgs/DeleteModel.h>
@@ -46,6 +47,7 @@ private:
     ros::ServiceClient delete_client_;
     ros::ServiceClient set_pose_client_;
     ros::ServiceClient get_pose_client_;
+    ros::ServiceClient get_socket_pose_client_;
     ros::ServiceClient delete_all_client_;
     ros::ServiceClient enable_check_touch_;
     ros::Subscriber pose_update_subscriber_;
@@ -134,10 +136,19 @@ public:
     bool GetObjectPose(UnrealInterface::Object::Id id, geometry_msgs::Pose &outPose);
 
     /**
+     * Gets the socket pose of a previously spawned object with the given UnrealInterface::Object::Id nd socket name as a string.
+     * This will retrieve the socket pose IMMEDIATELY from UE4 and put it into outPose in UE-World frame.
+     *
+     * @return true if object can be found by 'Id'. false otherwise.
+     */
+    bool GetObjectSocketPose(UnrealInterface::Object::Id id, UnrealInterface::Object::Socket socket, geometry_msgs::Pose &outPose);
+
+    /**
      * Iterate over this.spawned_objects_ and delete all of them sequentially
      *
      * @return false, if atleast one Delete operation failed. true otherwise.
      */
+
     bool DeleteAllSpawnedObjects();
 
     /**

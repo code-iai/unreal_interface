@@ -23,6 +23,8 @@ void UnrealInterface::Objects::Init()
             n_.serviceClient<world_control_msgs::SetModelPose>(urosworldcontrol_domain_ + "/set_model_pose");
     get_pose_client_ =
             n_.serviceClient<world_control_msgs::GetModelPose>(urosworldcontrol_domain_ + "/get_model_pose");
+    get_socket_pose_client_ =
+            n_.serviceClient<world_control_msgs::GetModelSocketPose>(urosworldcontrol_domain_ + "/get_model_socket_pose");
 
     pose_update_subscriber_ = n_.subscribe("/unreal_interface/object_poses",
             10,
@@ -41,6 +43,7 @@ bool UnrealInterface::Objects::TransportAvailable()
             delete_client_.exists() &&
             set_pose_client_.exists() &&
             get_pose_client_.exists() &&
+	    get_socket_pose_client_.exists() &&
             delete_all_client_.exists()
     );
 }
@@ -375,4 +378,31 @@ void UnrealInterface::Objects::StringUpdateCallback(const std_msgs::String& stri
 {
     std::string data = string_message.data;
     InputStateStream = data;
+}
+
+bool UnrealInterface::Objects::GetObjectSocketPose(UnrealInterface::Object::Id id,UnrealInterface::Object::Socket socket, geometry_msgs::Pose &pose)
+{
+    world_control_msgs::GetModelSocketPose getmodelsocketpose_srv;
+
+    // We assume that the UnrealInterface::Object::Id is equal to the semlog Id atm
+    getmodelsocketpose_srv.request.id = id;
+    getmodelsocketpose_srv.request.socket = socket;
+
+    if (!get_socket_pose_client_.call(getmodelsocketpose_srv))
+    {
+        ROS_ERROR("Failed to call service client for GetModelSocketPose");
+        return false;
+    }
+
+    if (!getmodelsocketpose_srv.response.success)
+    {
+        ROS_ERROR("GetModelSocketPose Service received non-success response during update");
+
+        return false;
+    }
+
+    pose.position = getmodelsocketpose_srv.response.pose.position;
+    pose.orientation = getmodelsocketpose_srv.response.pose.orientation;
+
+    return true;
 }
