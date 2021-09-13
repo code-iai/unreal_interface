@@ -116,7 +116,7 @@ public:
 
     bool DeleteObject(UnrealInterface::Object::Id id);
     bool DeleteObjects(std::vector<UnrealInterface::Object::Id> ids);
-    void CleanSpawnOnDelete(UnrealInterface::Object::Id id);
+    // void CleanSpawnOnDelete(UnrealInterface::Object::Id id);
 
     /**
      * Sets the pose of a previously spawned object with the given UnrealInterface::Object::Id.
@@ -165,6 +165,21 @@ public:
      */
     UnrealInterface::Object::ObjectInfo GetObjectInfo(UnrealInterface::Object::Id id);
 
+    /**
+     * Add an object to the internal object representation. 
+     * This might be useful if you want to add objects that are already in the world/map and don't need to be spawned.
+     *
+     * A warning will be issued when the object ID is already known internally.
+     *
+     * @returns false if ID is empty. true otherwise.
+     */
+    bool AddObjectInfo(UnrealInterface::Object::ObjectInfo);
+
+    /**
+     * Check if an object is already in the internal object representation.
+     */
+    bool IsObjectKnown(UnrealInterface::Object::Id id);
+
     std::string GetStateString();
     std::string GetTouchString();
 
@@ -186,7 +201,10 @@ public:
     // Add EventData Type as parameter for callback
     void BindToEvent(UnrealInterface::Object::ObjectEventType event, std::function<void(UnrealInterface::Object::ObjectEventType)> fun);
 
-private:
+    /**
+     * Initialize services and subscribers.
+     * Needs to be done again if the urosworldcontrol_domain_ is changed.
+     */
     void Init();
 
 protected:

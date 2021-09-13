@@ -171,13 +171,13 @@ bool UnrealInterface::Objects::DeleteModel(world_control_msgs::DeleteModel model
     return true;
 }
 
-void UnrealInterface::Objects::CleanSpawnOnDelete(UnrealInterface::Object::Id id)
-{
-        // Case in case it's not possible to delete but it's available in the spawned array. Seek for better way
-        spawned_objects_.erase(id);
-        std::cout << "Cleaning up..."  << std::endl;
-
-}
+// void UnrealInterface::Objects::CleanSpawnOnDelete(UnrealInterface::Object::Id id)
+// {
+//         // Case in case it's not possible to delete but it's available in the spawned array. Seek for better way
+//         spawned_objects_.erase(id);
+//         std::cout << "Cleaning up..."  << std::endl;
+// 
+// }
 
 UnrealInterface::Object::ObjectInfo UnrealInterface::Objects::GetObjectInfo(UnrealInterface::Object::Id id)
 {
@@ -186,6 +186,29 @@ UnrealInterface::Object::ObjectInfo UnrealInterface::Objects::GetObjectInfo(Unre
 
     std::lock_guard<std::mutex> guard(object_info_mutex_);
     return spawned_objects_[id];
+}
+
+bool UnrealInterface::Objects::AddObjectInfo(UnrealInterface::Object::ObjectInfo object_info)
+{
+  if(object_info.id_ == "")
+  {
+    ROS_ERROR_STREAM("UnrealInterface::Objects::AddObjectInfo: Can't add Object. ID is empty.");
+    return false;
+  }
+
+  if(IsObjectKnown(object_info.id_))
+  {
+    ROS_WARN_STREAM("UnrealInterface::Objects::AddObjectInfo: You are adding an object that is already known.");
+  }
+
+  spawned_objects_[object_info.id_] = object_info;
+
+  return true;
+}
+
+bool UnrealInterface::Objects::IsObjectKnown(UnrealInterface::Object::Id id)
+{
+  return spawned_objects_.count(id) > 0;
 }
 
 void UnrealInterface::Objects::PrintAllObjectInfo()
