@@ -49,16 +49,10 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>tf</build_depend>
-  <build_depend>world_control_msgs</build_depend>
-  <build_export_depend>roscpp</build_export_depend>
-  <build_export_depend>tf2</build_export_depend>
-  <build_export_depend>world_control_msgs</build_export_depend>
-  <exec_depend>roscpp</exec_depend>
-  <exec_depend>tf</exec_depend>
-  <exec_depend>world_control_msgs</exec_depend>
 
+  <depend>roscpp</depend>
+  <depend>tf</depend>
+  <depend>world_control_msgs</depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>
