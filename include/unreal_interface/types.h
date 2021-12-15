@@ -11,12 +11,14 @@ namespace UnrealInterface::Object
 {
   // typedefs
   typedef std::string Id;
+  typedef std::string Socket;	
 
   // Complex types
   class ObjectInfo
   {
   public:
     Id id_;
+    Socket socket_;
 
     // This is the unique Name of the Actor that you wil get when calling GetName() on an UE4 Actor
     std::string actor_name_;
