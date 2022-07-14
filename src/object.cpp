@@ -81,6 +81,9 @@ int UnrealInterface::Objects::SpawnObject(world_control_msgs::SpawnModel model, 
             ROS_ERROR("Spawnmodel Error02: Input Location is obstructed by another object. Wasn't Spawned.");
             return 2;
         }
+
+        ROS_ERROR("Spawnmodel generic error occured");
+	return 3;
     }
 
     //save object in object map
